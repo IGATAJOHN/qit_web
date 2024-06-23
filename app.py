@@ -41,5 +41,8 @@ def submit_contact_form():
     finally:
         # Close the session
         db.session.close()
+@app.route('/meetup')
+def meetup():
+    return render_template('meetup.html')
 if __name__=='__main__':
     app.run(debug=True)
