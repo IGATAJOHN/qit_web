@@ -44,5 +44,9 @@ def submit_contact_form():
 @app.route('/meetup')
 def meetup():
     return render_template('meetup.html')
+@app.route('/meets-gallery')
+def meets_gallery():
+    return render_template('meets-gallery.html')
+    
 if __name__=='__main__':
     app.run(debug=True)
