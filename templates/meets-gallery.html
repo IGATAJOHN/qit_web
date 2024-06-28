@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webinar Recordings</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #d0d7e8);
+            font-family: 'Roboto', sans-serif;
+        }
+        .hero {
+            background: #007bff;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .hero h1 {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.5em;
+        }
+        .card {
+            margin-bottom: 30px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+        }
+        .video-container iframe, .video-container object, .video-container embed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>Weekly Webinar Recordings</h1>
+        <p>Catch up on our latest webinars</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- Video 1 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">The World of Cybersecurity</h2>
+                        <p class="card-text">A Guide on Cybersecurity Specialization...</p>
+                        <div class="video-container">
+                            <iframe src="{{url_for('static',filename='assets/videos/firstrecording.mp4')}}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video 2 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">UAV TECHNOLOGY</h2>
+                        <p class="card-text">Understanding the working principle of various UAVs, their classification and Design...</p>
+                        <div class="video-container">
+                            <iframe width="560" height="315" src="https://www.youtube.com/watch?v=FL1ITXwVByA" frameborder="0" allowfullscreen></iframe>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+      <!-- Video 2 -->
+
+      <!-- Video 2 -->
+   
+            <!-- More videos can be added here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
