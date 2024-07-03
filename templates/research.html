@@ -85,7 +85,13 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">QuantumLabs</a>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
         <a class="btn btn-secondary ml-auto" href="{{ url_for('upload') }}">Upload Article</a>
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.role == 'user' %}
+        <a class="btn btn-secondary ml-auto" href="{{ url_for('logout') }}">Logout</a>
+        {% endif %}
+        
     </nav>
 
     <div class="container mt-5">
