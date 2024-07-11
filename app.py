@@ -43,7 +43,11 @@ class Article(db.Model):
     content = db.Column(db.Text, nullable=False)
     author = db.Column(db.String(50), nullable=False)
     date = db.Column(db.Date, nullable=False)
-    
+    likes = db.Column(db.Integer, default=0)
+    dislikes = db.Column(db.Integer, default=0)
+    favorites = db.Column(db.Integer, default=0)
+    comments = db.relationship('Comment', backref='article', lazy=True)
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -51,8 +55,22 @@ class Article(db.Model):
             'description': self.description,
             'content': self.content,
             'author': self.author,
-            'date': self.date.strftime('%Y-%m-%d')
+            'date': self.date.strftime('%Y-%m-%d'),
+            'likes': self.likes,
+            'dislikes': self.dislikes,
+            'favorites': self.favorites,
+            'comments': [comment.content for comment in self.comments]
         }
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+    replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
+    user = db.relationship('User', backref='comments')
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -80,6 +98,66 @@ class User(UserMixin, db.Model):
         return str(self.id)
 with app.app_context():
     db.create_all()
+@app.route('/like_article/<int:article_id>', methods=['POST'])
+@login_required
+def like_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    article.likes += 1
+    db.session.commit()
+    return jsonify({'success': True, 'likes': article.likes})
+
+@app.route('/dislike_article/<int:article_id>', methods=['POST'])
+@login_required
+def dislike_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    article.dislikes += 1
+    db.session.commit()
+    return jsonify({'success': True, 'dislikes': article.dislikes})
+@app.route('/add_comment/<int:article_id>', methods=['POST'])
+@login_required  # Ensures the user is logged in
+def add_comment(article_id):
+    # Check if request.json is None or doesn't contain the necessary data
+    if not request.json or 'content' not in request.json:
+        return jsonify({'error': 'Invalid data'}), 400
+
+    content = request.json.get('content')
+    parent_id = request.json.get('parent_id')
+
+    # Create a new comment
+    new_comment = Comment(
+        content=content,
+        user_id=current_user.id,
+        article_id=article_id,
+        parent_id=parent_id
+    )
+
+    try:
+        # Add the new comment to the database
+        db.session.add(new_comment)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to add comment', 'details': str(e)}), 500
+
+    # Prepare response data
+    response_data = {
+        'id': new_comment.id,
+        'username': current_user.username,
+        'content': new_comment.content,
+        'parent_id': new_comment.parent_id
+    }
+
+    return jsonify(response_data), 201
+
+@app.route('/favorite_article/<int:article_id>', methods=['POST'])
+@login_required
+def favorite_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    article.favorites += 1
+    db.session.commit()
+    return jsonify({'success': True, 'favorites': article.favorites})
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -123,7 +201,8 @@ def login():
     return render_template('login.html')
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    session = db.session  # Get the current session
+    return session.get(User, int(user_id))
 @app.route('/edit_article/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_article(id):
@@ -185,8 +264,23 @@ def meetups_gallery():
 @app.route('/research')
 def research():
     articles = Article.query.all()
-    articles_data = [article.to_dict() for article in articles]
+    articles_data = [
+        {
+            'id': article.id,
+            'title': article.title,
+            'description': article.description,
+            'content': article.content,
+            'author': article.author,
+            'date': article.date.strftime('%Y-%m-%d'),
+            'likes': getattr(article, 'likes', 0),
+            'dislikes': getattr(article, 'dislikes', 0),
+            'favorites': getattr(article, 'favorites', 0),
+            'comments': [{'content': comment.content} for comment in article.comments]
+        }
+        for article in articles
+    ]
     return render_template('research.html', articles=articles_data)
+
 def admin_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
@@ -218,7 +312,7 @@ def upload():
 def logout():
     logout_user()
     flash('Logged out successfully.', 'info')
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 @app.errorhandler(401)
 def unauthorized(error):
     return render_template('unauthorize.html'), 401
