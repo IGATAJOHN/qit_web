@@ -2,3 +2,5 @@ flask
 flask_sqlalchemy
 flask_migrate
 gunicorn
+flask_wtf
+python-dotenv
