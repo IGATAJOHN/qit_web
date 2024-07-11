@@ -4,3 +4,4 @@ flask_migrate
 gunicorn
 flask_wtf
 python-dotenv
+flask_login
