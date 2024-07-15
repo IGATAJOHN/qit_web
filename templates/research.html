@@ -79,7 +79,7 @@
 
                 <div id="article-content-{{ article.id }}" class="article-content">
                     <hr>
-                    <p>{{ article.content }}</p>
+                    <p>{{ article.content|safe }}</p>
 
                     <!-- Comments section -->
                     <div>
