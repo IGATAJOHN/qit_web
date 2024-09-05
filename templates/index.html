@@ -12,7 +12,7 @@
   <!-- Favicons -->
   <link href="{{url_for('static',filename='assets/img/qit_logo.jpg')}}" rel="icon">
   <link href="{{url_for('static',filename='assets/img/qit_logo.jpg')}}" rel="apple-touch-icon">
-
+  <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css"  rel="stylesheet" />
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Jost:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
@@ -67,7 +67,7 @@
 <!-- ======= Hero Section ======= -->
 <section id="hero" class="d-flex align-items-center">
 
-  <div class="container">
+  <div class="container one">
     <div class="row">
       <div class="col-lg-6 d-flex flex-column justify-content-center pt-4 pt-lg-0 order-2 order-lg-1" data-aos="fade-up" data-aos-delay="200">
         <h1>Revolutionizing Healthcare Delivery</h1>
@@ -366,75 +366,57 @@
       <p>Meet the dedicated professionals driving innovation at Quantum Innovative Tech Solutions.</p>
     </div>
 
-    <div class="row">
+    <div class="grid grid-cols-4 gap-4">
 
-      <div class="col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-        <div class="member d-flex align-items-start">
-          <div class="pic"><img src="{{url_for('static',filename='assets/img/team/igatus.jpg')}}" class="img-fluid" alt="Walter White"></div>
-          <div class="member-info">
-            <h4>Igata John</h4>
-            <span>Chief Executive Officer</span>
-            <p>With a vision for transformative healthcare, Igata John leads our team towards innovation and excellence.</p>
-            <div class="social">
-              <a href="#"><i class="ri-twitter-fill"></i></a>
-              <a href="https://web.facebook.com/profile.php?id=61550967944463"><i class="ri-facebook-fill"></i></a>
-              <a href="https://www.instagram.com/igatus_wells/"><i class="ri-instagram-fill"></i></a>
-              <a href="https://www.linkedin.com/in/igata-john-70b642135/"><i class="ri-linkedin-box-fill"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-        <div class="member d-flex align-items-start">
-          <div class="pic"><img src="{{url_for('static',filename='assets/img/team/dada.jpeg')}}" class="img-fluid" alt="Odunayo Dada"></div>
-          <div class="member-info">
-            <h4>Odunayo Dada</h4>
-            <span>Software Engineering</span>
-            <p>With a passion for transformative healthcare, Odunayo leads our team towards innovation and excellence in software engineering.</p>
-            <div class="social">
-              <a href="#"><i class="ri-twitter-fill"></i></a>
-              <a href="https://web.facebook.com/profile.php?id=61550967944463"><i class="ri-facebook-fill"></i></a>
-              <a href="https://www.instagram.com/igatus_wells/"><i class="ri-instagram-fill"></i></a>
-              <a href="https://www.linkedin.com/in/igata-john-70b642135/"><i class="ri-linkedin-box-fill"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-        <div class="member d-flex align-items-start">
-          <div class="pic"><img src="{{url_for('static',filename='assets/img/team/jess.jpeg')}}" class="img-fluid" alt="Jessica Ugwu"></div>
-          <div class="member-info">
-            <h4>Jessica Ugwu</h4>
-            <span>Chief Finance Officer</span>
-            <p>With expertise in finance and a vision for transformative healthcare, Jessica leads our team towards financial innovation and excellence.</p>
-            <div class="social">
-              <a href="#"><i class="ri-twitter-fill"></i></a>
-              <a href="https://web.facebook.com/profile.php?id=61550967944463"><i class="ri-facebook-fill"></i></a>
-              <a href="https://www.instagram.com/igatus_wells/"><i class="ri-instagram-fill"></i></a>
-              <a href="https://www.linkedin.com/in/igata-john-70b642135/"><i class="ri-linkedin-box-fill"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-lg-3" data-aos="zoom-in" data-aos-delay="100">
-        <div class="member d-flex align-items-start">
-          <div class="pic"><img src="{{url_for('static',filename='assets/img/p.jpeg')}}" class="img-fluid" alt="Adaeze Precious"></div>
-          <div class="member-info">
-            <h4>Precious Adaeze</h4>
-            <span>Co-founder</span>
-            <p>Precious Adaeze is the new co-founder of Quantum Innovative Tech Solutions Ltd., bringing her expertise in cybersecurity to the team. With a strong background in protecting digital assets and ensuring the integrity of online systems, she plays a crucial role in safeguarding the company's technological innovations.</p>
-            <div class="social">
-              <a href="#"><i class="ri-twitter-fill"></i></a>
-              <a href="https://web.facebook.com/profile.php?id=61550967944463"><i class="ri-facebook-fill"></i></a>
-              <a href="https://www.instagram.com/igatus_wells/"><i class="ri-instagram-fill"></i></a>
-              <a href="https://www.linkedin.com/in/igata-john-70b642135/"><i class="ri-linkedin-box-fill"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-      
+<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+  <div class="flex justify-end px-4 pt-4">
+
+
+  </div>
+  <div class="flex flex-col items-center pb-10">
+      <img class="w-24 h-24 mb-3 rounded-full shadow-lg" src="{{url_for('static',filename='assets/img/igatus.jpg')}}" alt="Bonnie image"/>
+      <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">Igata John</h5>
+      <span class="text-sm text-gray-500 dark:text-gray-400">Founder and CEO</span>
+     
+  </div>
+</div>
+<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+  <div class="flex justify-end px-4 pt-4">
+
+
+  </div>
+  <div class="flex flex-col items-center pb-10">
+      <img class="w-24 h-24 mb-3 rounded-full shadow-lg" src="{{url_for('static',filename='assets/img/p.jpeg')}}" alt="Bonnie image"/>
+      <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">Adaeze Precious</h5>
+      <span class="text-sm text-gray-500 dark:text-gray-400">Co-Founder</span>
+     
+  </div>
+</div>
+
+<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+  <div class="flex justify-end px-4 pt-4">
+
+
+  </div>
+  <div class="flex flex-col items-center pb-10">
+      <img class="w-24 h-24 mb-3 rounded-full shadow-lg" src="{{url_for('static',filename='assets/img/ss.jpg')}}" alt="Bonnie image"/>
+      <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">Olagbile Samson</h5>
+      <span class="text-sm text-gray-500 dark:text-gray-400">Chief Data Scientist</span>
+     
+  </div>
+</div>
+<div class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+  <div class="flex justify-end px-4 pt-4">
+
+
+  </div>
+  <div class="flex flex-col items-center pb-10">
+      <img class="w-24 h-24 mb-3 rounded-full shadow-lg" src="{{url_for('static',filename='assets/img/jj.png')}}" alt="Bonnie image"/>
+      <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">Success</h5>
+      <span class="text-sm text-gray-500 dark:text-gray-400">Software Developer</span>
+
+  </div>
+</div>
       <!-- Add more team members here -->
 
     </div>
@@ -670,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
 </body>
 
 </html>
