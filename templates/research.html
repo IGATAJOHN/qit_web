@@ -1,109 +1,77 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Articles</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .article-card {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin: 10px 0;
-            position: relative;
-        }
-
-        .toggle-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-        }
-
-        .article-content {
-            display: none;
-            margin-top: 10px;
-        }
-
-        .interaction-buttons {
-            margin-top: 10px;
-        }
-
-        .edit-delete-buttons {
-            margin-top: 10px;
-        }
-
-        .reply-form {
-            margin-top: 10px;
-            margin-left: 20px;
-        }
-
-        .comment {
-            margin-top: 10px;
-        }
-
-        .comment .user-info {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .reply {
-            margin-left: 20px;
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">QuantumLabs</a>
-        {% if current_user.is_authenticated and current_user.role == 'admin' %}
-        <a class="btn btn-secondary ml-auto" href="{{ url_for('upload') }}">Upload Article</a>
-        {% endif %}
-        {% if current_user.is_authenticated %}
-        <a class="btn btn-secondary ml-auto" href="{{ url_for('logout') }}">Logout</a>
-        {% else %}
-        <a class="btn btn-secondary ml-auto" href="{{ url_for('login') }}">Login</a>
-        {% endif %}
+
+<body class="bg-gray-50">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-900 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a class="text-white text-2xl font-semibold" href="#">QuantumLabs</a>
+            <div>
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <a class="btn btn-primary text-white px-4 py-2 rounded ml-2" href="{{ url_for('upload') }}">Upload Article</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <a class="btn btn-secondary text-white px-4 py-2 rounded ml-2" href="{{ url_for('logout') }}">Logout</a>
+                {% else %}
+                <a class="btn btn-secondary text-white px-4 py-2 rounded ml-2" href="{{ url_for('login') }}">Login</a>
+                {% endif %}
+            </div>
+        </div>
     </nav>
 
-    <div class="container mt-5">
-        <h1 class="my-4 text-primary">Research Articles</h1>
-        <div id="articles" class="list-group">
+    <!-- Main Content -->
+    <div class="container mx-auto mt-10">
+        <h1 class="text-3xl font-bold text-blue-800 mb-6">Research Articles</h1>
+
+        <div id="articles" class="space-y-6">
             {% for article in articles %}
-            <div class="list-group-item list-group-item-action article-card">
-                <h5 class="mb-1 text-primary">{{ article.title }}</h5>
-                <p class="mb-1">{{ article.description }}</p>
-                <small>{{ article.author }} - {{ article.date }}</small>
-                <button class="toggle-button btn btn-link" onclick="toggleContent({{ article.id }})">▼</button>
+            <div class="bg-white shadow rounded-lg p-6 relative">
+                <h2 class="text-2xl font-semibold text-blue-800">{{ article.title }}</h2>
+                <p class="text-gray-600 mt-2">{{ article.description|safe }}</p>
+                <small class="text-gray-500">{{ article.author }} - {{ article.date }}</small>
 
-                <div id="article-content-{{ article.id }}" class="article-content">
-                    <hr>
-                    <p>{{ article.content|safe }}</p>
+                <button class="absolute top-4 right-4 text-blue-800" onclick="toggleContent({{ article.id }})">
+                    ▼
+                </button>
 
-                    <!-- Comments section -->
-                    <div>
-                        <h4>Comments:</h4>
-                        <div id="comments-{{ article.id }}">
+                <div id="article-content-{{ article.id }}" class="article-content mt-4 hidden">
+                    <hr class="mb-4">
+                    <div>{{ article.content|safe }}</div>
+
+                    <!-- Comments Section -->
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-blue-800">Comments:</h4>
+                        <div id="comments-{{ article.id }}" class="space-y-4 mt-4">
                             {% for comment in article.comments %}
-                            <div class="comment alert alert-info" role="alert" data-comment-id="{{ comment.id }}">
+                            <div class="bg-gray-100 p-4 rounded-lg shadow comment" data-comment-id="{{ comment.id }}">
                                 {% if comment.user %}
-                                <div class="user-info">{{ comment.user.username }}</div>
+                                <div class="font-semibold text-blue-700">{{ comment.user.username }}</div>
                                 {% endif %}
-                                <div class="comment-content">{{ comment.content }}</div>
-                                <button class="btn btn-link" onclick="toggleReplyForm({{ comment.id }})">Reply</button>
-                                <div class="reply-form" id="reply-form-{{ comment.id }}" style="display: none;">
-                                    <textarea class="form-control" placeholder="Write your reply"></textarea>
+                                <p class="text-gray-600 mt-2">{{ comment.content|safe }}</p>
+                                <button class="text-blue-800 mt-2" onclick="toggleReplyForm({{ comment.id }})">Reply</button>
+
+                                <div class="reply-form mt-4 hidden" id="reply-form-{{ comment.id }}">
+                                    <textarea class="form-control w-full px-4 py-2 rounded-lg" placeholder="Write your reply"></textarea>
                                     <button class="btn btn-primary mt-2" onclick="addComment({{ article.id }}, {{ comment.id }})">Add Reply</button>
                                 </div>
+
                                 {% if comment.replies %}
-                                <div class="replies">
+                                <div class="replies mt-4 space-y-4 ml-6">
                                     {% for reply in comment.replies %}
-                                    <div class="reply alert alert-secondary">
+                                    <div class="bg-gray-200 p-3 rounded-lg shadow reply">
                                         {% if reply.user %}
-                                        <div class="user-info">{{ reply.user.username }}</div>
+                                        <div class="font-semibold text-blue-700">{{ reply.user.username }}</div>
                                         {% endif %}
-                                        <div class="comment-content">{{ reply.content }}</div>
+                                        <p class="text-gray-600 mt-2">{{ reply.content|safe }}</p>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -112,18 +80,25 @@
                             {% endfor %}
                         </div>
                     </div>
-                    <textarea class="form-control" id="comment-{{ article.id }}" placeholder="Write your comment"></textarea>
+
+                    <textarea class="form-control w-full mt-4 px-4 py-2 rounded-lg" id="comment-{{ article.id }}" placeholder="Write your comment"></textarea>
                     <button class="btn btn-primary mt-2" onclick="addComment({{ article.id }})">Add Comment</button>
                 </div>
 
-                <div class="interaction-buttons">
-                    <button class="btn btn-sm btn-outline-primary" onclick="updateArticleCount('{{ url_for('like_article', article_id=article.id) }}', 'likes-{{ article.id }}')">Like <span id="likes-{{ article.id }}">{{ article.likes or 0 }}</span></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="updateArticleCount('{{ url_for('dislike_article', article_id=article.id) }}', 'dislikes-{{ article.id }}')">Dislike <span id="dislikes-{{ article.id }}">{{ article.dislikes or 0 }}</span></button>
-                    <button class="btn btn-sm btn-outline-warning" onclick="updateArticleCount('{{ url_for('favorite_article', article_id=article.id) }}', 'favorites-{{ article.id }}')">Favorite <span id="favorites-{{ article.id }}">{{ article.favorites or 0 }}</span></button>
+                <div class="interaction-buttons flex space-x-4 mt-6">
+                    <button class="btn btn-outline-primary" onclick="updateArticleCount('{{ url_for('like_article', article_id=article.id) }}', 'likes-{{ article.id }}')">
+                        Like <span id="likes-{{ article.id }}">{{ article.likes or 0 }}</span>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="updateArticleCount('{{ url_for('dislike_article', article_id=article.id) }}', 'dislikes-{{ article.id }}')">
+                        Dislike <span id="dislikes-{{ article.id }}">{{ article.dislikes or 0 }}</span>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="updateArticleCount('{{ url_for('favorite_article', article_id=article.id) }}', 'favorites-{{ article.id }}')">
+                        Favorite <span id="favorites-{{ article.id }}">{{ article.favorites or 0 }}</span>
+                    </button>
                 </div>
 
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <div class="edit-delete-buttons">
+                <div class="edit-delete-buttons mt-6 flex space-x-4">
                     <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-primary btn-sm">Edit</a>
                     <a href="{{ url_for('delete_article', id=article.id) }}" class="btn btn-danger btn-sm">Delete</a>
                 </div>
@@ -136,23 +111,12 @@
     <script>
         function toggleContent(articleId) {
             const contentDiv = document.getElementById(`article-content-${articleId}`);
-            const button = contentDiv.previousElementSibling;
-            contentDiv.style.display = contentDiv.style.display === "block" ? "none" : "block";
-            button.innerHTML = contentDiv.style.display === "block" ? "▲" : "▼";
+            contentDiv.classList.toggle('hidden');
         }
 
         function toggleReplyForm(commentId) {
-            console.log('toggleReplyForm called with commentId:', commentId);
-            if (!commentId) {
-                console.error('Comment ID is undefined. Check the HTML and data binding.');
-                return;
-            }
             const replyForm = document.getElementById(`reply-form-${commentId}`);
-            if (!replyForm) {
-                console.error(`Reply form with id reply-form-${commentId} not found`);
-                return;
-            }
-            replyForm.style.display = replyForm.style.display === "block" ? "none" : "block";
+            replyForm.classList.toggle('hidden');
         }
 
         function addComment(articleId, parentId = null) {
@@ -167,59 +131,44 @@
                 },
                 body: JSON.stringify({ content: commentContent, parent_id: parentId }),
             })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Failed to add comment');
-            })
+            .then(response => response.ok ? response.json() : Promise.reject('Failed to add comment'))
             .then(data => {
-                if (data.parent_id) {
-                    const repliesDiv = document.querySelector(`[data-comment-id='${data.parent_id}'] .replies`);
-                    repliesDiv.innerHTML += `<div class="reply alert alert-secondary">
-                                                <div class="user-info">${data.username}</div>
-                                                <div class="comment-content">${data.content}</div>
-                                              </div>`;
+                const commentsDiv = parentId 
+                    ? document.querySelector(`[data-comment-id='${data.parent_id}'] .replies`)
+                    : document.getElementById(`comments-${articleId}`);
+
+                commentsDiv.innerHTML += `
+                    <div class="comment alert alert-info mt-4 p-4 rounded-lg shadow" data-comment-id="${data.id}">
+                        <div class="font-semibold text-blue-700">${data.username}</div>
+                        <p class="text-gray-600 mt-2">${data.content|safe}</p>
+                        <button class="text-blue-800 mt-2" onclick="toggleReplyForm(${data.id})">Reply</button>
+                        <div class="reply-form hidden mt-4" id="reply-form-${data.id}">
+                            <textarea class="form-control w-full px-4 py-2 rounded-lg" placeholder="Write your reply"></textarea>
+                            <button class="btn btn-primary mt-2" onclick="addComment(${articleId}, ${data.id})">Add Reply</button>
+                        </div>
+                        <div class="replies mt-4 space-y-4"></div>
+                    </div>`;
+                
+                if (parentId) {
                     document.querySelector(`#reply-form-${data.parent_id} textarea`).value = '';
                 } else {
-                    const commentsDiv = document.getElementById(`comments-${articleId}`);
-                    commentsDiv.innerHTML += `<div class="comment alert alert-info" role="alert" data-comment-id="${data.id}">
-                                                <div class="user-info">${data.username}</div>
-                                                <div class="comment-content">${data.content}</div>
-                                                <button class="btn btn-link" onclick="toggleReplyForm(${data.id})">Reply</button>
-                                                <div class="reply-form" id="reply-form-${data.id}" style="display: none;">
-                                                    <textarea class="form-control" placeholder="Write your reply"></textarea>
-                                                    <button class="btn btn-primary mt-2" onclick="addComment(${articleId}, ${data.id})">Add Reply</button>
-                                                </div>
-                                                <div class="replies"></div>
-                                              </div>`;
                     document.getElementById(`comment-${articleId}`).value = '';
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .catch(error => console.error('Error:', error));
         }
 
         function updateArticleCount(url, elementId) {
-            fetch(url, {
-                method: 'POST'
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Failed to update count');
-            })
+            fetch(url, { method: 'POST' })
+            .then(response => response.ok ? response.json() : Promise.reject('Failed to update count'))
             .then(data => {
-                if (data.success) {
-                    document.getElementById(elementId).textContent = data[elementId.split('-')[0]];
-                }
+                document.getElementById(elementId).textContent = data[elementId.split('-')[0]];
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .catch(error => console.error('Error:', error));
         }
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
 </body>
+
 </html>
