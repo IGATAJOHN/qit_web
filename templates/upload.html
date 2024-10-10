@@ -5,49 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Article</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.tiny.cloud/1/cz7e4uxaqwkph2sagvqvs4xpt3hz059ncj8j0epzgsnv7in3/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
-        tinymce.init({
-            selector: 'textarea',
-            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage advtemplate ai mentions tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss markdown',
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-            tinycomments_mode: 'embedded',
-            tinycomments_author: 'Author name',
-            mergetags_list: [
-                { value: 'First.Name', title: 'First Name' },
-                { value: 'Email', title: 'Email' }
-            ],
-            ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant"))
-        });
+        function wrapText(tag) {
+            const textarea = document.getElementById('content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            let wrappedText = selectedText;
+            if (tag === 'bold') {
+                wrappedText = `**${selectedText}**`; // Markdown for bold
+            } else if (tag === 'italic') {
+                wrappedText = `*${selectedText}*`; // Markdown for italic
+            } else if (tag === 'underline') {
+                wrappedText = `<u>${selectedText}</u>`; // HTML tag for underline
+            }
+
+            textarea.value = beforeText + wrappedText + afterText;
+            textarea.focus();
+            textarea.setSelectionRange(start, start + wrappedText.length);
+        }
     </script>
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="text-primary">Upload New Article</h1>
+
+        <!-- Form starts here -->
         <form action="{{ url_for('upload') }}" method="POST">
+            <!-- Article Title -->
             <div class="form-group">
                 <label for="title">Article Title</label>
                 <input type="text" id="title" name="title" class="form-control" required>
             </div>
+
+            <!-- Description -->
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
             </div>
+
+            <!-- Content -->
             <div class="form-group">
                 <label for="content">Content</label>
+
+                <!-- Toolbar for text formatting -->
+                <div class="btn-toolbar mb-3" role="toolbar">
+                    <button type="button" class="btn btn-outline-primary" onclick="wrapText('bold')"><strong>B</strong></button>
+                    <button type="button" class="btn btn-outline-primary" onclick="wrapText('italic')"><em>I</em></button>
+                    <button type="button" class="btn btn-outline-primary" onclick="wrapText('underline')"><u>U</u></button>
+                </div>
+
                 <textarea id="content" name="content" class="form-control" rows="6" required></textarea>
             </div>
+
+            <!-- Author -->
             <div class="form-group">
                 <label for="author">Author</label>
                 <input type="text" id="author" name="author" class="form-control" required>
             </div>
+
+            <!-- Date -->
             <div class="form-group">
                 <label for="date">Date</label>
                 <input type="date" id="date" name="date" class="form-control" required>
             </div>
+
+            <!-- Submit Button -->
             <button type="submit" class="btn btn-primary">Upload</button>
         </form>
+
+        <!-- Back to Articles Button -->
         <a href="{{ url_for('research') }}" class="btn btn-secondary mt-3">Back to Articles</a>
     </div>
 </body>
