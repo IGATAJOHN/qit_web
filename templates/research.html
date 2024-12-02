@@ -7,6 +7,9 @@
     <title>Research Articles</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body class="bg-gray-50">
@@ -17,7 +20,8 @@
             <a class="text-white text-2xl font-semibold" href="#">QuantumLabs</a>
             <div>
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <a class="btn btn-primary text-white px-4 py-2 rounded ml-2" href="{{ url_for('upload') }}">Upload Article</a>
+                <a class="btn btn-primary text-white px-4 py-2 rounded ml-2" href="{{ url_for('upload') }}">Upload
+                    Article</a>
                 {% endif %}
                 {% if current_user.is_authenticated %}
                 <a class="btn btn-secondary text-white px-4 py-2 rounded ml-2" href="{{ url_for('logout') }}">Logout</a>
@@ -49,50 +53,78 @@
 
                     <!-- Comments Section -->
                     <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-blue-800">Comments:</h4>
-                        <div id="comments-{{ article.id }}" class="space-y-4 mt-4">
-                            {% for comment in article.comments %}
-                            <div class="bg-gray-100 p-4 rounded-lg shadow comment" data-comment-id="{{ comment.id }}">
-                                {% if comment.user %}
-                                <div class="font-semibold text-blue-700">{{ comment.user.username }}</div>
-                                {% endif %}
-                                <p class="text-gray-600 mt-2">{{ comment.content|safe }}</p>
-                                <button class="text-blue-800 mt-2" onclick="toggleReplyForm({{ comment.id }})">Reply</button>
-
-                                <div class="reply-form mt-4 hidden" id="reply-form-{{ comment.id }}">
-                                    <textarea class="form-control w-full px-4 py-2 rounded-lg" placeholder="Write your reply"></textarea>
-                                    <button class="btn btn-primary mt-2" onclick="addComment({{ article.id }}, {{ comment.id }})">Add Reply</button>
-                                </div>
-
-                                {% if comment.replies %}
-                                <div class="replies mt-4 space-y-4 ml-6">
-                                    {% for reply in comment.replies %}
-                                    <div class="bg-gray-200 p-3 rounded-lg shadow reply">
-                                        {% if reply.user %}
-                                        <div class="font-semibold text-blue-700">{{ reply.user.username }}</div>
-                                        {% endif %}
-                                        <p class="text-gray-600 mt-2">{{ reply.content|safe }}</p>
+                        <div class="bg-white shadow rounded-lg p-6 relative" data-article-id="{{ article.id }}">
+                            <h4
+                                class="text-lg foArticle element with 'data-article-id' not found.nt-semibold text-blue-800">
+                                Comments:</h4>
+                            <div id="comments-{{ article.id }}" class="space-y-4 mt-4">
+                                {% for comment in article.comments %}
+                                {% if comment.id and comment.id|int %}
+                                <div class="bg-gray-100 p-4 rounded-lg shadow comment"
+                                    data-comment-id="{{ comment.id }}">
+                                    {% if comment.user %}
+                                    <div class="font-semibold text-blue-700">{{ comment.user.username }}</div>
+                                    {% endif %}
+                                    <div class="text-gray-600 mt-2" id="comment-content-{{ comment.id }}">
+                                        {{ comment.content|safe }}
                                     </div>
-                                    {% endfor %}
+                                    <button class="text-red-800 mt-2"
+                                        onclick="deleteComment({{ comment.id }})">Delete</button>
+                                    <button class="text-blue-800 mt-2"
+                                        onclick="toggleReplyForm({{ comment.id }})">Reply</button>
+
+                                    <!-- Example of rendering comments in HTML -->
+                                    <div id="comments-section">
+                                        {% for comment in comments %}
+                                        <div class="comment" id="comment-{{ comment.id }}">
+                                            <p><strong>{{ comment.username }}</strong>: {{ comment.content }}</p>
+                                            <!-- Debugging output -->
+                                            <p>Comment ID: {{ comment.id }}</p>
+                                            <button class="delete-comment" data-comment-id="{{ comment.id }}"
+                                                style="display: inline-block; background-color: red; color: white; padding: 5px 10px;">Delete</button>
+
+                                            <!-- Render nested replies if applicable -->
+                                            {% for reply in comment.replies %}
+                                            <div class="reply" id="reply-{{ reply.id }}">
+                                                <p><strong>{{ reply.username }}</strong>: {{ reply.content }}</p>
+                                                <button class="delete-comment" data-comment-id="{{ reply.id }}"
+                                                    style="display: inline-block; background-color: red; color: white; padding: 5px 10px;">Delete</button>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+
+                                    <div class="reply-form hidden mt-4" id="reply-form-{{ comment.id }}">
+                                        <textarea id="reply-editor-{{ comment.id }}"></textarea>
+                                        <button class="btn btn-primary mt-2" onclick="addReply({{ comment.id }})">
+                                            Post Reply
+                                        </button>
+                                    </div>
                                 </div>
                                 {% endif %}
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
 
-                    <textarea class="form-control w-full mt-4 px-4 py-2 rounded-lg" id="comment-{{ article.id }}" placeholder="Write your comment"></textarea>
+                    <textarea id="comment-editor-{{ article.id }}" class="hidden"></textarea>
+                    <div id="md-editor-{{ article.id }}" class="mt-4"></div>
                     <button class="btn btn-primary mt-2" onclick="addComment({{ article.id }})">Add Comment</button>
                 </div>
 
                 <div class="interaction-buttons flex space-x-4 mt-6">
-                    <button class="btn btn-outline-primary" onclick="updateArticleCount('{{ url_for('like_article', article_id=article.id) }}', 'likes-{{ article.id }}')">
+                    <button class="btn btn-outline-primary"
+                        onclick="updateArticleCount('{{ url_for('like_article', article_id=article.id) }}', 'likes-{{ article.id }}')">
                         Like <span id="likes-{{ article.id }}">{{ article.likes or 0 }}</span>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="updateArticleCount('{{ url_for('dislike_article', article_id=article.id) }}', 'dislikes-{{ article.id }}')">
+                    <button class="btn btn-outline-danger"
+                        onclick="updateArticleCount('{{ url_for('dislike_article', article_id=article.id) }}', 'dislikes-{{ article.id }}')">
                         Dislike <span id="dislikes-{{ article.id }}">{{ article.dislikes or 0 }}</span>
                     </button>
-                    <button class="btn btn-outline-warning" onclick="updateArticleCount('{{ url_for('favorite_article', article_id=article.id) }}', 'favorites-{{ article.id }}')">
+                    <button class="btn btn-outline-warning"
+                        onclick="updateArticleCount('{{ url_for('favorite_article', article_id=article.id) }}', 'favorites-{{ article.id }}')">
                         Favorite <span id="favorites-{{ article.id }}">{{ article.favorites or 0 }}</span>
                     </button>
                 </div>
@@ -114,58 +146,323 @@
             contentDiv.classList.toggle('hidden');
         }
 
+        // Toggle the reply form visibility
         function toggleReplyForm(commentId) {
-            const replyForm = document.getElementById(`reply-form-${commentId}`);
-            replyForm.classList.toggle('hidden');
+            const commentElement = document.querySelector(`.comment[data-comment-id="${commentId}"]`);
+
+            if (!commentElement) {
+                console.error(`Comment element not found for comment ID: ${commentId}`);
+                return;
+            }
+
+            let replyForm = document.getElementById(`reply-form-${commentId}`);
+            if (!replyForm) {
+                replyForm = document.createElement("div");
+                replyForm.id = `reply-form-${commentId}`;
+                replyForm.classList.add("reply-form", "p-3", "border", "rounded", "mt-2", "hidden");
+
+                const textarea = document.createElement("textarea");
+                textarea.id = `reply-editor-${commentId}`;
+                textarea.classList.add("w-full", "h-20", "border", "rounded", "p-2");
+                textarea.placeholder = "Write your reply here...";
+                replyForm.appendChild(textarea);
+
+                const submitButton = document.createElement("button");
+                submitButton.classList.add("mt-2", "bg-blue-500", "text-white", "px-4", "py-2", "rounded");
+                submitButton.textContent = "Post Reply";
+                submitButton.onclick = () => addReply(commentId);
+                replyForm.appendChild(submitButton);
+
+                commentElement.appendChild(replyForm);
+
+                // Initialize Markdown editor
+                initializeReplyEditor(commentId);
+            }
+
+            replyForm.classList.toggle("hidden");
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.delete-comment').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    const commentId = event.target.getAttribute('data-comment-id');
+                    if (confirm('Are you sure you want to delete this comment?')) {
+                        fetch(`/delete_comment/${commentId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                            .then((response) => {
+                                if (response.ok) {
+                                    // Remove the comment from the DOM
+                                    document.getElementById(`comment-${commentId}`).remove();
+                                    alert('Comment deleted successfully!');
+                                } else {
+                                    response.json().then((data) => {
+                                        alert(data.message || 'Failed to delete comment.');
+                                    });
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error deleting comment:', error);
+                                alert('An error occurred while deleting the comment.');
+                            });
+                    }
+                });
+            });
+        });
+
+
+
+        const editors = {}; // Global object to store editor instances by their IDs
+
+        // Initialize Markdown editor for replies dynamically
+        function initializeReplyEditor(commentId) {
+            const editorId = `reply-editor-${commentId}`;
+            const textarea = document.getElementById(editorId);
+            if (!textarea) {
+                console.error(`Textarea not found for ID: ${editorId}`);
+                return;
+            }
+
+            function destroyEditor(editorId) {
+                if (editors[editorId]) {
+                    editors[editorId].toTextArea();
+                    delete editors[editorId];
+                }
+            }
+
+
+            // Initialize SimpleMDE and store the instance
+            editors[editorId] = new SimpleMDE({ element: textarea });
+            console.log(`Editor initialized for ${editorId}`);
+        }
+
+        // Add a reply to a specific comment
+        function addReply(commentId) {
+            const editorId = `reply-editor-${commentId}`;
+            const editor = editors[editorId];
+            if (!editor) {
+                alert("Editor instance not found!");
+                return;
+            }
+
+            const replyContent = editor.value().trim(); // Get editor content
+            if (!replyContent) {
+                alert("Reply content cannot be empty.");
+                return;
+            }
+
+            // Make the API call
+            fetch(`/reply_comment/${commentId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: replyContent }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Reply posted successfully:", data);
+                })
+                .catch(error => console.error("Error posting reply:", error));
+        }
+
+
+        // Initialize Markdown Editors for comments
+        const simpleMDEInstances = {};
+        const commentEditors = document.querySelectorAll('[id^=comment-editor-]');
+        commentEditors.forEach(textarea => {
+            const editorId = textarea.id.replace('comment-editor-', '');
+            simpleMDEInstances[textarea.id] = new SimpleMDE({
+                element: textarea,
+                placeholder: "Write your comment with Markdown formatting...",
+            });
+        });
+
+        function fetchComments(articleId) {
+            fetch(`/get_comments/${articleId}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch comments. Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    const commentsDiv = document.querySelector(`#comments-${articleId}`);
+                    if (commentsDiv) {
+                        commentsDiv.innerHTML = ""; // Clear existing comments
+
+                        if (data && data.length > 0) {
+                            data.forEach((comment) => {
+                                const commentElement = createCommentElement(comment);
+                                commentsDiv.appendChild(commentElement);
+                            });
+                        } else {
+                            commentsDiv.textContent = "No comments yet.";
+                        }
+                    } else {
+                        console.error(`Comments container not found for article ID: ${articleId}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching comments:", error);
+                });
         }
 
         function addComment(articleId, parentId = null) {
-            const commentContent = parentId 
-                ? document.querySelector(`#reply-form-${parentId} textarea`).value 
-                : document.getElementById(`comment-${articleId}`).value;
+            const editorId = parentId
+                ? `reply-editor-${parentId}`
+                : `comment-editor-${articleId}`;
+            const editor = simpleMDEInstances[editorId];
+            if (!editor) {
+                console.error(`Editor instance not found for ID: ${editorId}`);
+                return;
+            }
+
+            const editorContent = editor.value();
+            if (!editorContent.trim()) {
+                alert("Comment content cannot be empty.");
+                return;
+            }
+
+            // Save to localStorage
+            const localStorageKey = parentId ? `reply-${parentId}` : `comment-${articleId}`;
+            localStorage.setItem(localStorageKey, editorContent);
 
             fetch(`/add_comment/${articleId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content: commentContent, parent_id: parentId }),
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: editorContent, parent_id: parentId }),
             })
-            .then(response => response.ok ? response.json() : Promise.reject('Failed to add comment'))
-            .then(data => {
-                const commentsDiv = parentId 
-                    ? document.querySelector(`[data-comment-id='${data.parent_id}'] .replies`)
-                    : document.getElementById(`comments-${articleId}`);
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to add comment/reply");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    const commentsDiv = parentId
+                        ? document.querySelector(`.comment[data-comment-id="${parentId}"] .replies`)
+                        : document.querySelector(`#comments-${articleId}`);
+                    if (commentsDiv) {
+                        const newComment = parentId
+                            ? createReplyElement(data)
+                            : createCommentElement(data);
+                        commentsDiv.appendChild(newComment);
 
-                commentsDiv.innerHTML += `
-                    <div class="comment alert alert-info mt-4 p-4 rounded-lg shadow" data-comment-id="${data.id}">
-                        <div class="font-semibold text-blue-700">${data.username}</div>
-                        <p class="text-gray-600 mt-2">${data.content|safe}</p>
-                        <button class="text-blue-800 mt-2" onclick="toggleReplyForm(${data.id})">Reply</button>
-                        <div class="reply-form hidden mt-4" id="reply-form-${data.id}">
-                            <textarea class="form-control w-full px-4 py-2 rounded-lg" placeholder="Write your reply"></textarea>
-                            <button class="btn btn-primary mt-2" onclick="addComment(${articleId}, ${data.id})">Add Reply</button>
-                        </div>
-                        <div class="replies mt-4 space-y-4"></div>
-                    </div>`;
-                
-                if (parentId) {
-                    document.querySelector(`#reply-form-${data.parent_id} textarea`).value = '';
-                } else {
-                    document.getElementById(`comment-${articleId}`).value = '';
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                        // Clear the editor and localStorage after success
+                        editor.value("");
+                        localStorage.removeItem(localStorageKey);
+                    } else {
+                        console.error("Comments container not found");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error adding comment/reply:", error);
+                });
         }
+
+        // Restore comment content from localStorage on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            Object.keys(localStorage).forEach((key) => {
+                if (key.startsWith("comment-") || key.startsWith("reply-")) {
+                    const editorId = key.replace("comment-", "comment-editor-").replace("reply-", "reply-editor-");
+                    const editor = simpleMDEInstances[editorId];
+                    if (editor) {
+                        editor.value(localStorage.getItem(key));
+                    }
+                }
+            });
+        });
+
+
+        function deleteComment(commentId) {
+            fetch(`/delete_comment/${commentId}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the comment from the UI
+                        document.getElementById(`comment-${commentId}`).remove();
+                    } else {
+                        // Handle error, e.g., display an error message
+                        console.error(data.error);
+                    }
+                });
+        }
+
+
+
+
+        // Add comment handler (adjusted to work with replies)
+        function createCommentElement(data) {
+            const commentDiv = document.createElement("div");
+            commentDiv.classList.add("bg-gray-300", "p-4", "rounded-lg", "shadow", "comment");
+            commentDiv.setAttribute("data-comment-id", data.id);
+
+            // Add username
+            if (data.username) {
+                const userDiv = document.createElement("div");
+                userDiv.classList.add("font-bold", "text-blue-800");
+                userDiv.textContent = data.username;
+                commentDiv.appendChild(userDiv);
+            }
+
+            // Add comment content
+            const contentDiv = document.createElement("div");
+            contentDiv.classList.add("text-gray-700", "mt-2");
+            contentDiv.innerHTML = data.content;
+            commentDiv.appendChild(contentDiv);
+
+            // Add reply button
+            const replyButton = document.createElement("button");
+            replyButton.classList.add("mt-2", "text-sm", "text-blue-600", "hover:underline");
+            replyButton.textContent = "Reply";
+            replyButton.onclick = function () {
+                toggleReplyForm(data.id);
+            };
+            commentDiv.appendChild(replyButton);
+
+            // Add replies container
+            const repliesContainer = document.createElement("div");
+            repliesContainer.classList.add("replies", "ml-6", "mt-3");
+            commentDiv.appendChild(repliesContainer);
+
+            // Render replies if available
+            if (data.replies && data.replies.length > 0) {
+                data.replies.forEach((reply) => {
+                    const replyElement = createCommentElement(reply);
+                    repliesContainer.appendChild(replyElement);
+                });
+            }
+
+            return commentDiv;
+        }
+
 
         function updateArticleCount(url, elementId) {
             fetch(url, { method: 'POST' })
-            .then(response => response.ok ? response.json() : Promise.reject('Failed to update count'))
-            .then(data => {
-                document.getElementById(elementId).textContent = data[elementId.split('-')[0]];
-            })
-            .catch(error => console.error('Error:', error));
+                .then((response) => response.json())
+                .then((data) => {
+                    const countElement = document.getElementById(elementId);
+                    if (countElement) countElement.textContent = data.count;
+                })
+                .catch((error) => console.error('Error updating count:', error));
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const articleElement = document.querySelector("[data-article-id]");
+            if (articleElement) {
+                const articleId = articleElement.getAttribute("data-article-id");
+                fetchComments(articleId);
+            } else {
+                console.error("Article element with 'data-article-id' not found.");
+            }
+        });
+
+
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
