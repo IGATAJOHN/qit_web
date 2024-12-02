@@ -46,7 +46,7 @@ class Article(db.Model):
     likes = db.Column(db.Integer, default=0)
     dislikes = db.Column(db.Integer, default=0)
     favorites = db.Column(db.Integer, default=0)
-    comments = db.relationship('Comment', backref='article', lazy=True)
+    comments = db.relationship('Comment', backref='article', lazy=True, cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -70,6 +70,10 @@ class Comment(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
     user = db.relationship('User', backref='comments')
+
+class Reply(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -113,41 +117,100 @@ def dislike_article(article_id):
     article.dislikes += 1
     db.session.commit()
     return jsonify({'success': True, 'dislikes': article.dislikes})
+
 @app.route('/add_comment/<int:article_id>', methods=['POST'])
-@login_required  # Ensures the user is logged in
+@login_required
 def add_comment(article_id):
-    # Check if request.json is None or doesn't contain the necessary data
     if not request.json or 'content' not in request.json:
         return jsonify({'error': 'Invalid data'}), 400
 
     content = request.json.get('content')
     parent_id = request.json.get('parent_id')
 
-    # Create a new comment
     new_comment = Comment(
         content=content,
         user_id=current_user.id,
         article_id=article_id,
-        parent_id=parent_id
+        parent_id=parent_id  # parent_id is None for root-level comments
     )
 
     try:
-        # Add the new comment to the database
+        db.session.add(new_comment)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to add comment', 'details': str(e)}), 500.
+
+    return jsonify({
+        'id': new_comment.id,  # Include the comment ID in the response
+        'username': current_user.username,
+        'content': new_comment.content,
+        'parent_id': new_comment.parent_id
+    }), 201
+    
+
+@app.route('/reply_comment/<int:comment_id>', methods=['POST'])
+@login_required
+def reply_comment(comment_id):  # Update parameter name
+    # Validate JSON payload
+    if not request.json or not request.json.get('content'):
+        return jsonify({'error': 'Reply content cannot be empty'}), 400
+
+    # Extract content
+    content = request.json.get('content')
+
+    # Fetch parent comment
+    parent_comment = Comment.query.get_or_404(comment_id)
+
+    # Create a new reply
+    new_comment = Comment(
+        content=content,
+        user_id=current_user.id,
+        article_id=parent_comment.article_id,
+        parent_id=parent_comment.id
+    )
+
+    try:
         db.session.add(new_comment)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Failed to add comment', 'details': str(e)}), 500
+        return jsonify({'error': 'Failed to add reply', 'details': str(e)}), 500
 
-    # Prepare response data
-    response_data = {
+    return jsonify({
         'id': new_comment.id,
         'username': current_user.username,
         'content': new_comment.content,
         'parent_id': new_comment.parent_id
-    }
+    }), 201  # Remove the redundant return statement
 
-    return jsonify(response_data), 201
+@app.route('/get_comments/<int:article_id>')
+def get_comments(article_id):
+    article = Article.query.get_or_404(article_id)
+    comments = [
+        {
+            'id': comment.id,
+            'content': comment.content,
+            'username': comment.user.username if comment.user else None,  # Add username
+            'replies': get_replies(comment)  # Fetch replies recursively
+        }
+        for comment in article.comments if comment.parent_id is None  # Get top-level comments
+    ]
+    return jsonify(comments)
+
+def get_replies(comment):
+    """Recursively fetch replies for a comment."""
+    replies = [
+        {
+            'id': reply.id,
+            'content': reply.content,
+            'username': reply.user.username if reply.user else None,
+            'replies': get_replies(reply)  # Recursive call for nested replies
+        }
+        for reply in comment.replies
+    ]
+    return replies
 
 @app.route('/favorite_article/<int:article_id>', methods=['POST'])
 @login_required
@@ -212,6 +275,7 @@ def edit_article(id):
     if form.validate_on_submit():
         article.title = form.title.data
         article.content = form.content.data
+        article.date = datetime.now()  # Update the date to the current date
         db.session.commit()
         flash('Article updated successfully.', 'success')
         return redirect(url_for('research'))
@@ -219,6 +283,7 @@ def edit_article(id):
     form.title.data = article.title
     form.content.data = article.content
     return render_template('edit_article.html', form=form)
+
 
 @app.route('/delete_article/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -228,6 +293,24 @@ def delete_article(id):
     db.session.commit()
     flash('Article deleted successfully.', 'success')
     return redirect(url_for('research'))
+
+@app.route('/delete_comment/<int:comment_id>', methods=['DELETE'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+
+    # Allow only comment authors or admins to delete
+    if comment.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    try:
+        db.session.delete(comment)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Comment deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Failed to delete comment', 'details': str(e)}), 500
+    
 @app.route('/submit-contact-form', methods=['POST'])
 def submit_contact_form():
     # Retrieve form data
@@ -275,11 +358,15 @@ def research():
             'likes': getattr(article, 'likes', 0),
             'dislikes': getattr(article, 'dislikes', 0),
             'favorites': getattr(article, 'favorites', 0),
-            'comments': [{'content': comment.content} for comment in article.comments]
+            'comments': [
+                {'id': comment.id, 'content': comment.content}
+                for comment in article.comments
+            ]
         }
         for article in articles
     ]
     return render_template('research.html', articles=articles_data)
+
 
 def admin_required(func):
     @wraps(func)
@@ -318,4 +405,4 @@ def unauthorized(error):
     return render_template('unauthorize.html'), 401
 
 if __name__=='__main__':
-    app.run(debug=True,host='0.0.0.0',port='5000')
+    app.run()
